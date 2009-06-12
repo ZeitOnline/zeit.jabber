@@ -13,11 +13,12 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
+        'ZConfig',
        'setuptools',
        'xmpppy',
        ],
     entry_points="""
     [console_scripts]
-    notify = zeit.jabber.connect:main
+    notify = zeit.jabber.main:main
     """,
     )

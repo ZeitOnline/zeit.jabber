@@ -9,10 +9,14 @@ import zeit.jabber.connect
 
 class MockRPC(object):
 
+    exception = None
+
     def __init__(self):
         self.invalidated = []
 
     def invalidate(self, uid):
+        if self.exception is not None:
+            raise self.exception
         self.invalidated.append(uid)
 
 
@@ -34,8 +38,18 @@ class NotifierTest(unittest.TestCase):
         self.notifier.process()
         self.assertEquals(['bar', 'foo'], sorted(self.cms.invalidated))
 
-    def _test_errors(self):
-        pass
+    def test_errors_stay_in_queue(self):
+        self.queue.add('foo')
+        self.queue.add('bar')
+        self.cms.exception = Exception()
+        self.notifier.process()
+        self.assertEquals(['bar', 'foo'], sorted(self.queue))
+
+    def test_exit_on_systemexit_and_keyboardinterrupt(self):
+        for exc in (SystemExit, KeyboardInterrupt):
+            self.queue.add('foo')
+            self.cms.exception = exc()
+            self.assertRaises(exc,  self.notifier.process)
 
 
 class MockJabberClient(object):
