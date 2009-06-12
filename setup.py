@@ -14,8 +14,8 @@ setup(
     zip_safe=False,
     install_requires=[
         'ZConfig',
-       'setuptools',
-       'xmpppy',
+        'setuptools',
+        'xmpppy',
        ],
     entry_points="""
     [console_scripts]
