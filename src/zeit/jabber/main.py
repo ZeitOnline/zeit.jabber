@@ -14,6 +14,7 @@ def main(config_file):
     conf, handler = ZConfig.loadConfigFile(schema, open(config_file))
     conf.eventlog.startup()
     cms = xmlrpclib.ServerProxy(conf.cms.url)
-    jabber = zeit.jabber.connect.get_jabber_client(
-        conf.jabber.user, conf.jabber.password, conf.jabber.group)
-    zeit.jabber.connect.main_loop(cms, jabber)
+    def jabber_client_factory():
+        return zeit.jabber.connect.get_jabber_client(
+            conf.jabber.user, conf.jabber.password, conf.jabber.group)
+    zeit.jabber.connect.main_loop(cms, jabber_client_factory)

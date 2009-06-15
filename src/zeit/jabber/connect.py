@@ -1,6 +1,6 @@
+import logging
 import os
 import sys
-import logging
 import threading
 import time
 import xmlrpclib
@@ -39,12 +39,26 @@ class Notifier(object):
 class Reader(object):
 
     prefix = 'Resource changed: /cms/work/'
+    client = None
+    client_disconnected_sleep = 10
 
-    def __init__(self, jabber_client, queue):
-        self.client = jabber_client
+    def __init__(self, jabber_client_factory, queue):
+        self.client_factory = jabber_client_factory
         self.queue = queue
-        self.client.RegisterHandler('message', self.message_handler)
 
+    def get_client(self):
+        if self.client is None:
+            self.client = self.client_factory()
+        if self.client and self.client.isConnected():
+            self.client.RegisterHandler('message', self.message_handler)
+        else:
+            log.error("Could not connect to webdav server.")
+            self.client = None
+        return self.client
+
+    def reconnect_client(self):
+        self.client = None
+        self.get_client()
 
     def message_handler(self, connection, message):
         from_ = message.getFrom().getResource()
@@ -55,17 +69,24 @@ class Reader(object):
             return
         uid = 'http://xml.zeit.de/' + body[len(self.prefix):]
         self.queue.add(uid)
-        log.info('Scheduled for invalidation: %s' % uid)
+        log.info('Scheduling for invalidation: %s' % uid)
         raise xmpp.NodeProcessed
 
     def process(self):
         # When there are messages processed, it is likely there will be more.
         # Therefore we loop until there was nothing processed
         while True:
-            result = self.client.Process(10)
-            if not isinstance(result, int):
-                # Disconnected or nothing processed
-                # XXX what else should we do here?
+            client = self.get_client()
+            if client is None:
+                time.sleep(self.client_disconnected_sleep)
+                break
+            result = client.Process(10)
+            if result:
+                if not int(result):
+                    # No message processed
+                    break
+            else:
+                # Error
                 break
 
 
@@ -73,7 +94,9 @@ def get_jabber_client(user, password, group):
     log.info("Connecting to jabber server as %s" % user)
     jid = xmpp.protocol.JID(user)
     client = xmpp.Client(jid.getDomain(), debug=())
-    con = client.connect()
+    client.connect()
+    if not client.isConnected():
+        return None
     auth = client.auth(jid.getNode(), password, resource=jid.getResource())
     client.sendInitPresence()
     nick_base = 'cms-frontend'
@@ -93,10 +116,10 @@ def get_jabber_client(user, password, group):
     return client
 
 
-def main_loop(cms, jabber_client):
+def main_loop(cms, jabber_client_factory):
     queue = set()
     notifier = Notifier(cms, queue)
-    reader = Reader(jabber_client, queue)
+    reader = Reader(jabber_client_factory, queue)
 
     while True:
         reader.process()

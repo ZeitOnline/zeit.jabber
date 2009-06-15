@@ -56,6 +56,7 @@ class MockJabberClient(object):
 
     messages = []
     return_in_one_step = 100
+    connected = True
 
     def RegisterHandler(self, type_, callback):
         self.handler = callback
@@ -71,6 +72,9 @@ class MockJabberClient(object):
             if processed >= self.return_in_one_step:
                 break
         return processed or '0'
+
+    def isConnected(self):
+        return self.connected
 
 
 class JabberData(object):
@@ -90,7 +94,7 @@ class JabberData(object):
 class ReaderTest(unittest.TestCase):
 
     def setUp(self):
-        self.client = MockJabberClient()
+        self.client = type('Mock', (MockJabberClient,), {})
         self.queue = set()
         self.reader = zeit.jabber.connect.Reader(self.client, self.queue)
 
@@ -140,6 +144,16 @@ class ReaderTest(unittest.TestCase):
         self.reader.process()
         self.assertEquals([], list(self.queue))
 
+    def test_disconnect(self):
+        self.client.messages.append(self.message('foo'))
+        self.reader.client_disconnected_sleep = 0
+        self.client.connected = False
+        self.reader.process()
+        self.assertEquals([], list(self.queue))
+        self.client.connected = True
+        self.reader.process()
+        self.assertEquals(
+            ['http://xml.zeit.de/foo'], list(self.queue))
 
 def test_suite():
     suite = unittest.TestSuite()
