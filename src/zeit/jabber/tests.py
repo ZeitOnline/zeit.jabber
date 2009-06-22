@@ -13,11 +13,15 @@ class MockRPC(object):
 
     def __init__(self):
         self.invalidated = []
+        self.solr = []
 
     def invalidate(self, uid):
         if self.exception is not None:
             raise self.exception
         self.invalidated.append(uid)
+
+    def update_solr(self, uid):
+        self.solr.append(uid)
 
 
 class NotifierTest(unittest.TestCase):
@@ -31,6 +35,7 @@ class NotifierTest(unittest.TestCase):
         self.queue.add('foo')
         self.notifier.process()
         self.assertEquals(['foo'], self.cms.invalidated)
+        self.assertEquals(['foo'], self.cms.solr)
 
     def test_process_empties_queue_completely(self):
         self.queue.add('foo')

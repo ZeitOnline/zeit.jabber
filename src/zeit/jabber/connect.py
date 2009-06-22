@@ -24,10 +24,11 @@ class Notifier(object):
             log.debug('Invalidating %s' % uid)
             try:
                 self.cms.invalidate(uid)
+                self.cms.update_solr(uid)
             except (SystemExit, KeyboardInterrupt), e:
                 raise
             except:
-                log.error("Error while invalidating, trying again lagter.",
+                log.error("Error while invalidating, trying again later.",
                           exc_info=True)
                 errors.append(uid)
             else:
