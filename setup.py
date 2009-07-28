@@ -3,7 +3,7 @@ import os
 
 setup(
     name="zeit.jabber",
-    version="0.2dev",
+    version="0.3dev",
     description="Jabber",
     author='Martijn Faassen, Christian Zagrodnick',
     author_email='faassen@startifact.com, cz@gocept.com',
