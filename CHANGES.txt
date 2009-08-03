@@ -1,6 +1,11 @@
 zeit.jabber changes
 ===================
 
+0.3 (2009-08-08)
+----------------
+
+- Make the methods called on the CMS configurable.
+
 0.2 (2009-07-28)
 ----------------
 

@@ -9,6 +9,7 @@
     </sectiontype>
     <sectiontype name="cms">
         <key name="url" datatype="string" required="yes" />
+        <key name="methods" datatype="string" required="yes" />
     </sectiontype>
 
     <section type='eventlog' name='*' attribute='eventlog' required="yes"/>

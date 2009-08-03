@@ -14,6 +14,7 @@ class MockRPC(object):
     def __init__(self):
         self.invalidated = []
         self.solr = []
+        self.testing_method_log = []
 
     def invalidate(self, uid):
         if self.exception is not None:
@@ -23,19 +24,25 @@ class MockRPC(object):
     def update_solr(self, uid):
         self.solr.append(uid)
 
+    def testing_method(self, uid):
+        self.testing_method_log.append(uid)
+
 
 class NotifierTest(unittest.TestCase):
 
     def setUp(self):
         self.cms = MockRPC()
         self.queue = set()
-        self.notifier = zeit.jabber.connect.Notifier(self.cms, self.queue)
+        self.notifier = zeit.jabber.connect.Notifier(
+            self.cms, self.queue, methods=('invalidate', 'update_solr',
+                                           'testing_method'))
 
     def test_simple_pull(self):
         self.queue.add('foo')
         self.notifier.process()
         self.assertEquals(['foo'], self.cms.invalidated)
         self.assertEquals(['foo'], self.cms.solr)
+        self.assertEquals(['foo'], self.cms.testing_method_log)
 
     def test_process_empties_queue_completely(self):
         self.queue.add('foo')

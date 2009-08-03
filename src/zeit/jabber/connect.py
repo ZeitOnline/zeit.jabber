@@ -3,7 +3,6 @@ import os
 import sys
 import threading
 import time
-import xmlrpclib
 import xmpp
 
 
@@ -12,10 +11,11 @@ log = logging.getLogger(__name__)
 
 class Notifier(object):
 
-    def __init__(self, cms, queue):
+    def __init__(self, cms, queue, methods):
         super(Notifier, self).__init__()
         self.cms = cms
         self.queue = queue
+        self.methods = methods
 
     def process(self):
         errors = []
@@ -23,8 +23,8 @@ class Notifier(object):
             uid = self.queue.pop()
             log.debug('Invalidating %s' % uid)
             try:
-                self.cms.invalidate(uid)
-                self.cms.update_solr(uid)
+                for method in self.methods:
+                    getattr(self.cms, method)(uid)
             except (SystemExit, KeyboardInterrupt), e:
                 raise
             except:
@@ -117,9 +117,9 @@ def get_jabber_client(user, password, group):
     return client
 
 
-def main_loop(cms, jabber_client_factory):
+def main_loop(cms, methods, jabber_client_factory):
     queue = set()
-    notifier = Notifier(cms, queue)
+    notifier = Notifier(cms, queue, methods)
     reader = Reader(jabber_client_factory, queue)
 
     while True:
