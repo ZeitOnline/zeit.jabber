@@ -5,6 +5,8 @@ zeit.jabber changes
 ------------------
 
 - Using versions from the ZTK.
+- Added configuration option 'ignore' (which is a regexp and can be given
+  multiple times) to ignore messages based on their contents (#5620).
 
 0.3 (2009-08-08)
 ----------------

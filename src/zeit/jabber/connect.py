@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 import sys
 import threading
 import time
@@ -36,6 +37,14 @@ class Notifier(object):
         self.queue.update(errors)
 
 
+class Matcher(object):
+
+    def __init__(self, regex):
+        self.regex = re.compile(regex)
+
+    def __call__(self, text):
+        return bool(self.regex.search(text))
+
 
 class Reader(object):
 
@@ -43,9 +52,12 @@ class Reader(object):
     client = None
     client_disconnected_sleep = 10
 
-    def __init__(self, jabber_client_factory, queue):
+    def __init__(self, jabber_client_factory, queue, ignore=None):
         self.client_factory = jabber_client_factory
         self.queue = queue
+        if ignore is None:
+            ignore = []
+        self._ignore = [Matcher(x) for x in ignore]
 
     def get_client(self):
         if self.client is None:
@@ -66,12 +78,21 @@ class Reader(object):
         body = message.getBody()
         log.debug('Received message [%s] %s' % (from_, body))
         if from_ != 'cms-backend' or not body.startswith(self.prefix):
-            log.debug('Ignored message')
+            log.debug('Ignored message (wrong format)')
+            return
+        if self.ignore(body):
+            log.debug('Ignored message (matched ignores list)')
             return
         uid = 'http://xml.zeit.de/' + body[len(self.prefix):]
         self.queue.add(uid)
         log.info('Scheduling for invalidation: %s' % uid)
         raise xmpp.NodeProcessed
+
+    def ignore(self, text):
+        for matcher in self._ignore:
+            if matcher(text):
+                return True
+        return False
 
     def process(self):
         # When there are messages processed, it is likely there will be more.
@@ -117,10 +138,10 @@ def get_jabber_client(user, password, group):
     return client
 
 
-def main_loop(cms, methods, jabber_client_factory):
+def main_loop(cms, methods, jabber_client_factory, ignore):
     queue = set()
     notifier = Notifier(cms, queue, methods)
-    reader = Reader(jabber_client_factory, queue)
+    reader = Reader(jabber_client_factory, queue, ignore)
 
     while True:
         reader.process()

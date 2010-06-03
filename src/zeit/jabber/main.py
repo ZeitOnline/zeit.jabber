@@ -18,4 +18,5 @@ def main(config_file):
     def jabber_client_factory():
         return zeit.jabber.connect.get_jabber_client(
             conf.jabber.user, conf.jabber.password, conf.jabber.group)
-    zeit.jabber.connect.main_loop(cms, methods, jabber_client_factory)
+    zeit.jabber.connect.main_loop(
+        cms, methods, jabber_client_factory, conf.jabber.ignore)

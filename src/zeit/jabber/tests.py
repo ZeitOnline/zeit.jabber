@@ -167,6 +167,15 @@ class ReaderTest(unittest.TestCase):
         self.assertEquals(
             ['http://xml.zeit.de/foo'], list(self.queue))
 
+    def test_ignore_list(self):
+        self.reader = zeit.jabber.connect.Reader(
+            self.client, self.queue, ['/cms/work/foo'])
+        self.client.messages.append(self.message('foo'))
+        self.client.messages.append(self.message('bar'))
+        self.reader.process()
+        self.assertEquals(['http://xml.zeit.de/bar'], sorted(list(self.queue)))
+
+
 def test_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(NotifierTest))

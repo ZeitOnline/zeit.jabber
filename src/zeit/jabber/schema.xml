@@ -3,16 +3,17 @@
     <import package='ZConfig.components.basic' file='mapping.xml'/>
 
     <sectiontype name="jabber">
-        <key name="user" datatype="string" required="yes" /> 
-        <key name="password" datatype="string" required="yes" /> 
-        <key name="group" datatype="string" required="yes" /> 
+        <key name="user" datatype="string" required="yes" />
+        <key name="password" datatype="string" required="yes" />
+        <key name="group" datatype="string" required="yes" />
+        <multikey name="ignore" required="no" datatype="string" />
     </sectiontype>
     <sectiontype name="cms">
         <key name="url" datatype="string" required="yes" />
         <key name="methods" datatype="string" required="yes" />
     </sectiontype>
 
-    <section type='eventlog' name='*' attribute='eventlog' required="yes"/>
+    <section type='eventlog' name='*' attribute='eventlog' required="yes" />
     <section type='jabber' name='*' attribute='jabber' required="yes" />
     <section type='cms' name='*' attribute='cms' required="yes" />
 
