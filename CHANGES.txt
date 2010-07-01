@@ -1,7 +1,7 @@
 zeit.jabber changes
 ===================
 
-0.4.1 (unreleased)
+0.4.1 (2010-07-01)
 ------------------
 
 - Indicate that messages got processed. This hopefully causes the invalidator
