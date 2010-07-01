@@ -80,6 +80,8 @@ class MockJabberClient(object):
                 self.handler(None, self.messages.pop(0))
             except xmpp.NodeProcessed:
                 pass
+            else:
+                raise AssertionError("NodeProcessed not raised.")
             processed += 1
             if processed >= self.return_in_one_step:
                 break

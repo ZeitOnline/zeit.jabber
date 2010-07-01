@@ -79,10 +79,10 @@ class Reader(object):
         log.debug('Received message [%s] %s' % (from_, body))
         if from_ != 'cms-backend' or not body.startswith(self.prefix):
             log.debug('Ignored message (wrong format)')
-            return
+            raise xmpp.NodeProcessed
         if self.ignore(body):
             log.debug('Ignored message (matched ignores list)')
-            return
+            raise xmpp.NodeProcessed
         uid = 'http://xml.zeit.de/' + body[len(self.prefix):]
         self.queue.add(uid)
         log.info('Scheduling for invalidation: %s' % uid)

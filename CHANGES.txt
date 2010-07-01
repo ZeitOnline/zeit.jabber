@@ -4,7 +4,8 @@ zeit.jabber changes
 0.4.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Indicate that messages got processed. This hopefully causes the invalidator
+  to not use 100% CPU time. (#7568)
 
 
 0.4.0 (2010-06-03)
