@@ -61,7 +61,7 @@ class NotifierTest(unittest.TestCase):
         for exc in (SystemExit, KeyboardInterrupt):
             self.queue.add('foo')
             self.cms.exception = exc()
-            self.assertRaises(exc,  self.notifier.process)
+            self.assertRaises(exc, self.notifier.process)
 
 
 class MockJabberClient(object):

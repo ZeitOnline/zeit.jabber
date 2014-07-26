@@ -2,7 +2,6 @@
 # See also LICENSE.txt
 
 import ZConfig
-import logging
 import pkg_resources
 import xmlrpclib
 import zeit.jabber.connect
@@ -15,6 +14,7 @@ def main(config_file):
     conf.eventlog.startup()
     cms = xmlrpclib.ServerProxy(conf.cms.url)
     methods = tuple(method.strip() for method in conf.cms.methods.split())
+
     def jabber_client_factory():
         return zeit.jabber.connect.get_jabber_client(
             conf.jabber.user, conf.jabber.password, conf.jabber.group)
