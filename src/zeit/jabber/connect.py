@@ -1,8 +1,5 @@
 import logging
-import os
 import re
-import sys
-import threading
 import time
 import xmpp
 
@@ -26,7 +23,7 @@ class Notifier(object):
             try:
                 for method in self.methods:
                     getattr(self.cms, method)(uid)
-            except (SystemExit, KeyboardInterrupt), e:
+            except (SystemExit, KeyboardInterrupt):
                 raise
             except:
                 log.error("Error while invalidating, trying again later.",
