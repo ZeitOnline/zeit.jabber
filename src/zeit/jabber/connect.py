@@ -26,8 +26,8 @@ class Notifier(object):
             except (SystemExit, KeyboardInterrupt):
                 raise
             except:
-                log.error("Error while invalidating, trying again later.",
-                          exc_info=True)
+                log.error("Error while invalidating %s, trying again later.",
+                          uid, exc_info=True)
                 errors.append(uid)
             else:
                 log.info('Invalidated %s', uid)
