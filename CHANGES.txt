@@ -4,7 +4,7 @@ zeit.jabber changes
 0.4.2 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Give up processing after 3 retries (VIV-458).
 
 
 0.4.1 (2010-07-01)

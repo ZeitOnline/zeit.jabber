@@ -57,6 +57,14 @@ class NotifierTest(unittest.TestCase):
         self.notifier.process()
         self.assertEquals(['bar', 'foo'], sorted(self.queue))
 
+    def test_after_max_retries_errors_are_removed_from_queue(self):
+        self.queue.add('foo')
+        self.cms.exception = Exception()
+        self.notifier.MAX_RETRIES = 1
+        self.notifier.process()
+        self.notifier.process()
+        self.assertEqual(set(), self.queue)
+
     def test_exit_on_systemexit_and_keyboardinterrupt(self):
         for exc in (SystemExit, KeyboardInterrupt):
             self.queue.add('foo')
