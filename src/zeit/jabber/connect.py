@@ -19,7 +19,7 @@ class Notifier(object):
         errors = []
         while self.queue:
             uid = self.queue.pop()
-            log.debug('Invalidating %s' % uid)
+            log.debug('Invalidating %s', uid)
             try:
                 for method in self.methods:
                     getattr(self.cms, method)(uid)
@@ -30,7 +30,7 @@ class Notifier(object):
                           exc_info=True)
                 errors.append(uid)
             else:
-                log.info('Invalidated %s' % uid)
+                log.info('Invalidated %s', uid)
         self.queue.update(errors)
 
 
@@ -73,7 +73,7 @@ class Reader(object):
     def message_handler(self, connection, message):
         from_ = message.getFrom().getResource()
         body = message.getBody()
-        log.debug('Received message [%s] %s' % (from_, body))
+        log.debug('Received message [%s] %s', from_, body)
         if from_ != 'cms-backend' or not body.startswith(self.prefix):
             log.debug('Ignored message (wrong format)')
             raise xmpp.NodeProcessed
@@ -82,7 +82,7 @@ class Reader(object):
             raise xmpp.NodeProcessed
         uid = 'http://xml.zeit.de/' + body[len(self.prefix):]
         self.queue.add(uid)
-        log.info('Scheduling for invalidation: %s' % uid)
+        log.info('Scheduling for invalidation: %s', uid)
         raise xmpp.NodeProcessed
 
     def ignore(self, text):
@@ -110,7 +110,7 @@ class Reader(object):
 
 
 def get_jabber_client(user, password, group):
-    log.info("Connecting to jabber server as %s" % user)
+    log.info("Connecting to jabber server as %s", user)
     jid = xmpp.protocol.JID(user)
     client = xmpp.Client(jid.getDomain(), debug=())
     client.connect()
@@ -131,7 +131,7 @@ def get_jabber_client(user, password, group):
             break
         nick = '%s-%s' % (nick_base, i)
 
-    log.info("Joined %s as %s" % (group, nick))
+    log.info("Joined %s as %s", group, nick)
     return client
 
 
