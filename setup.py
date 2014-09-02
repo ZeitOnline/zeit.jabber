@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="zeit.jabber",
-    version='0.4.2dev',
+    version='0.5.0',
     description="Jabber",
     author='Martijn Faassen, Christian Zagrodnick',
     author_email='faassen@startifact.com, cz@gocept.com',
