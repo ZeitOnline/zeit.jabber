@@ -36,8 +36,8 @@ class Notifier(object):
             except:
                 attempts = self.retries.setdefault(uid, 0)
                 self.retries[uid] = attempts + 1
-                log.error("Error while invalidating %s, trying again later.",
-                          uid, exc_info=True)
+                log.warning("Error while invalidating %s, trying again later.",
+                            uid, exc_info=True)
                 errors.append(uid)
             else:
                 log.info('Invalidated %s', uid)
