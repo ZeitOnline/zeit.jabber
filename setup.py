@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="zeit.jabber",
-    version='0.5.1',
+    version='0.5.2.dev0',
     description="XMPP client",
     author='Martijn Faassen, gocept, Zeit Online',
     author_email='zon-backend@zeit.de',
