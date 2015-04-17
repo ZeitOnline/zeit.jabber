@@ -1,7 +1,7 @@
 zeit.jabber changes
 ===================
 
-0.5.1 (unreleased)
+0.5.1 (2015-04-17)
 ------------------
 
 - Log retries only with warning, not error.
