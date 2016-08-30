@@ -31,4 +31,5 @@ def main(argv=None):
 
     while True:
         reader.process()
-        notifier.process()
+        if hasattr(notifier, 'process'):
+            notifier.process()

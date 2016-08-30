@@ -22,7 +22,7 @@ class Reader(object):
     client = None
     client_disconnected_sleep = 10
 
-    def __init__(self, jabber_client_factory, queue, ignore=None):
+    def __init__(self, jabber_client_factory, action, ignore=None):
         """
         :param jabber_client_factory: callable with no arguments to create a
           jabber client (we need to recreate it to support reconnect)
@@ -30,7 +30,7 @@ class Reader(object):
           which we'll call for each changed uniqueId.
         """
         self.client_factory = jabber_client_factory
-        self.queue = queue
+        self.action = action
         if ignore is None:
             ignore = []
         self._ignore = [Matcher(x) for x in ignore]
@@ -60,7 +60,7 @@ class Reader(object):
             log.debug('Ignored message (matched ignores list)')
             raise xmpp.NodeProcessed
         uid = 'http://xml.zeit.de/' + body[len(self.prefix):]
-        self.queue.add(uid)
+        self.action(uid)
         log.info('Scheduling for invalidation: %s', uid)
         raise xmpp.NodeProcessed
 

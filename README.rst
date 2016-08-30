@@ -25,8 +25,10 @@ ignorieren.
 
 Der ``target``-Abschnitt muss im Schlüssel ``use`` einen Python-Dottedname
 enthalten, ein Callable, das den Konfigurationsabschnitt als dict übergeben
-bekommt und ein Objekt zurückgibt, das eine ``add(item)`` Methode bereitstellt.
-Diese wird von der Jabber-Komponente für jede geänderte uniqueId aufgerufen.
+bekommt und ein Objekt zurückgibt, das eine ``__call__(item)`` Methode
+bereitstellt; diese wird von der Jabber-Komponente für jede geänderte uniqueId
+aufgerufen. Optional ist eine Methode ``process()``, diese wird periodisch
+aufgerufen (und kann z.B. eine Queue abarbeiten).
 
 Außerdem kann per ``loggers`` etc. das stdlib logging konfiguriert werden.
 

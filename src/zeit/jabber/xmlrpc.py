@@ -16,7 +16,7 @@ class Notifier(object):
         self.methods = methods
         self.retries = {}
 
-    def add(self, item):
+    def __call__(self, item):
         self.queue.add(item)
 
     def process(self):

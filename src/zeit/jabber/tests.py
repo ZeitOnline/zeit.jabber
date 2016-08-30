@@ -113,7 +113,7 @@ class ReaderTest(unittest.TestCase):
     def setUp(self):
         self.client = type('Mock', (MockJabberClient,), {})
         self.queue = set()
-        self.reader = zeit.jabber.jabber.Reader(self.client, self.queue)
+        self.reader = zeit.jabber.jabber.Reader(self.client, self.queue.add)
 
     def message(self, path, from_='cms-backend', prefix=None):
         if prefix is None:
@@ -174,7 +174,7 @@ class ReaderTest(unittest.TestCase):
 
     def test_ignore_list(self):
         self.reader = zeit.jabber.jabber.Reader(
-            self.client, self.queue, ['/cms/work/foo'])
+            self.client, self.queue.add, ['/cms/work/foo'])
         self.client.messages.append(self.message('foo'))
         self.client.messages.append(self.message('bar'))
         self.reader.process()
