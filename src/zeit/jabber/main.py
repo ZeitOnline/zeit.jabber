@@ -2,6 +2,7 @@ import ZConfig
 import pkg_resources
 import xmlrpclib
 import zeit.jabber.connect
+import zeit.jabber.xmlrpc
 
 
 def main(config_file):
@@ -15,5 +16,15 @@ def main(config_file):
     def jabber_client_factory():
         return zeit.jabber.connect.get_jabber_client(
             conf.jabber.user, conf.jabber.password, conf.jabber.group)
-    zeit.jabber.connect.main_loop(
+    main_loop(
         cms, methods, jabber_client_factory, conf.jabber.ignore)
+
+
+def main_loop(cms, methods, jabber_client_factory, ignore):
+    queue = set()
+    notifier = zeit.jabber.xmlrpc.Notifier(cms, queue, methods)
+    reader = zeit.jabber.connect.Reader(jabber_client_factory, queue, ignore)
+
+    while True:
+        reader.process()
+        notifier.process()

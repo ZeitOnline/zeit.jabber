@@ -1,7 +1,7 @@
-import time
 import unittest
 import xmpp
 import zeit.jabber.connect
+import zeit.jabber.xmlrpc
 
 
 class MockRPC(object):
@@ -30,7 +30,7 @@ class NotifierTest(unittest.TestCase):
     def setUp(self):
         self.cms = MockRPC()
         self.queue = set()
-        self.notifier = zeit.jabber.connect.Notifier(
+        self.notifier = zeit.jabber.xmlrpc.Notifier(
             self.cms, self.queue, methods=('invalidate', 'update_solr',
                                            'testing_method'))
 

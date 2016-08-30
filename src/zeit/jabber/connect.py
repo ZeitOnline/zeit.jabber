@@ -7,43 +7,6 @@ import xmpp
 log = logging.getLogger(__name__)
 
 
-class Notifier(object):
-
-    MAX_RETRIES = 3
-
-    def __init__(self, cms, queue, methods):
-        super(Notifier, self).__init__()
-        self.cms = cms
-        self.queue = queue
-        self.methods = methods
-        self.retries = {}
-
-    def process(self):
-        errors = []
-        while self.queue:
-            uid = self.queue.pop()
-            attempts = self.retries.get(uid, 0)
-            if attempts >= self.MAX_RETRIES:
-                log.error("Giving up on %s after %s retries", uid, attempts)
-                del self.retries[uid]
-                continue
-            log.debug('Invalidating %s', uid)
-            try:
-                for method in self.methods:
-                    getattr(self.cms, method)(uid)
-            except (SystemExit, KeyboardInterrupt):
-                raise
-            except:
-                attempts = self.retries.setdefault(uid, 0)
-                self.retries[uid] = attempts + 1
-                log.warning("Error while invalidating %s, trying again later.",
-                            uid, exc_info=True)
-                errors.append(uid)
-            else:
-                log.info('Invalidated %s', uid)
-        self.queue.update(errors)
-
-
 class Matcher(object):
 
     def __init__(self, regex):
@@ -143,13 +106,3 @@ def get_jabber_client(user, password, group):
 
     log.info("Joined %s as %s", group, nick)
     return client
-
-
-def main_loop(cms, methods, jabber_client_factory, ignore):
-    queue = set()
-    notifier = Notifier(cms, queue, methods)
-    reader = Reader(jabber_client_factory, queue, ignore)
-
-    while True:
-        reader.process()
-        notifier.process()
