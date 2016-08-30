@@ -112,3 +112,11 @@ def get_jabber_client(user, password, group):
 
     log.info("Joined %s as %s", group, nick)
     return client
+
+
+def from_config(config):
+    ignore = [x for x in config['ignore'].split('\n') if x]
+    return Reader(
+        lambda: get_jabber_client(
+            config['user'], config['password'], config['group']),
+        config['queue'], ignore)

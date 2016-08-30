@@ -1,24 +1,33 @@
-import ZConfig
-import pkg_resources
-import xmlrpclib
+import ConfigParser
+import argparse
+import logging.config
+import os.path
 import zeit.jabber.jabber
-import zeit.jabber.xmlrpc
+import zope.dottedname.resolve
 
 
-def main(config_file):
-    schema = ZConfig.loadSchemaFile(pkg_resources.resource_stream(
-        __name__, 'schema.xml'))
-    conf, handler = ZConfig.loadConfigFile(schema, open(config_file))
-    conf.eventlog.startup()
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description='Listen for uniqueIds on jabber and act on them')
+    parser.add_argument(
+        'configfile', help='ini file')
+    options = parser.parse_args(argv)
+    config = ConfigParser.ConfigParser()
+    configfile = os.path.abspath(options.configfile)
+    config.read(configfile)
 
-    cms = xmlrpclib.ServerProxy(conf.cms.url)
-    methods = tuple(method.strip() for method in conf.cms.methods.split())
-    notifier = zeit.jabber.xmlrpc.Notifier(cms, methods)
+    # Inspired by pyramid.paster.setup_logging().
+    if config.has_section('loggers'):
+        logging.config.fileConfig(configfile, {
+            '__file__': configfile, 'here': os.path.dirname(configfile)})
 
-    reader = zeit.jabber.jabber.Reader(
-        lambda: zeit.jabber.jabber.get_jabber_client(
-            conf.jabber.user, conf.jabber.password, conf.jabber.group),
-        notifier, conf.jabber.ignore)
+    target = config.get('jabber', 'target')
+    factory = zope.dottedname.resolve.resolve(config.get(target, 'use'))
+    notifier = factory(dict(config.items(target)))
+
+    jabber = dict(config.items('jabber'))
+    jabber['queue'] = notifier
+    reader = zeit.jabber.jabber.from_config(jabber)
 
     while True:
         reader.process()

@@ -1,4 +1,5 @@
 import logging
+import xmlrpclib
 
 
 log = logging.getLogger(__name__)
@@ -42,3 +43,9 @@ class Notifier(object):
             else:
                 log.info('Invalidated %s', uid)
         self.queue.update(errors)
+
+
+def from_config(config):
+    cms = xmlrpclib.ServerProxy(config['url'])
+    methods = tuple(x.strip() for x in config['methods'].split())
+    return Notifier(cms, methods)
