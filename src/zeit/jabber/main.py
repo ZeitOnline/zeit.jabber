@@ -21,9 +21,8 @@ def main(config_file):
 
 
 def main_loop(cms, methods, jabber_client_factory, ignore):
-    queue = set()
-    notifier = zeit.jabber.xmlrpc.Notifier(cms, queue, methods)
-    reader = zeit.jabber.jabber.Reader(jabber_client_factory, queue, ignore)
+    notifier = zeit.jabber.xmlrpc.Notifier(cms, methods)
+    reader = zeit.jabber.jabber.Reader(jabber_client_factory, notifier, ignore)
 
     while True:
         reader.process()

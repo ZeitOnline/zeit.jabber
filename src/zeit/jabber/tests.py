@@ -29,42 +29,40 @@ class NotifierTest(unittest.TestCase):
 
     def setUp(self):
         self.cms = MockRPC()
-        self.queue = set()
         self.notifier = zeit.jabber.xmlrpc.Notifier(
-            self.cms, self.queue, methods=('invalidate', 'update_solr',
-                                           'testing_method'))
+            self.cms, methods=('invalidate', 'update_solr', 'testing_method'))
 
     def test_simple_pull(self):
-        self.queue.add('foo')
+        self.notifier.queue.add('foo')
         self.notifier.process()
         self.assertEquals(['foo'], self.cms.invalidated)
         self.assertEquals(['foo'], self.cms.solr)
         self.assertEquals(['foo'], self.cms.testing_method_log)
 
     def test_process_empties_queue_completely(self):
-        self.queue.add('foo')
-        self.queue.add('bar')
+        self.notifier.queue.add('foo')
+        self.notifier.queue.add('bar')
         self.notifier.process()
         self.assertEquals(['bar', 'foo'], sorted(self.cms.invalidated))
 
     def test_errors_stay_in_queue(self):
-        self.queue.add('foo')
-        self.queue.add('bar')
+        self.notifier.queue.add('foo')
+        self.notifier.queue.add('bar')
         self.cms.exception = Exception()
         self.notifier.process()
-        self.assertEquals(['bar', 'foo'], sorted(self.queue))
+        self.assertEquals(['bar', 'foo'], sorted(self.notifier.queue))
 
     def test_after_max_retries_errors_are_removed_from_queue(self):
-        self.queue.add('foo')
+        self.notifier.queue.add('foo')
         self.cms.exception = Exception()
         self.notifier.MAX_RETRIES = 1
         self.notifier.process()
         self.notifier.process()
-        self.assertEqual(set(), self.queue)
+        self.assertEqual(set(), self.notifier.queue)
 
     def test_exit_on_systemexit_and_keyboardinterrupt(self):
         for exc in (SystemExit, KeyboardInterrupt):
-            self.queue.add('foo')
+            self.notifier.queue.add('foo')
             self.cms.exception = exc()
             self.assertRaises(exc, self.notifier.process)
 

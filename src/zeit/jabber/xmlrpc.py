@@ -8,12 +8,15 @@ class Notifier(object):
 
     MAX_RETRIES = 3
 
-    def __init__(self, cms, queue, methods):
+    def __init__(self, cms, methods):
         super(Notifier, self).__init__()
         self.cms = cms
-        self.queue = queue
+        self.queue = set()
         self.methods = methods
         self.retries = {}
+
+    def add(self, item):
+        self.queue.add(item)
 
     def process(self):
         errors = []
