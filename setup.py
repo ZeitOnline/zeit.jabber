@@ -13,12 +13,12 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'ZConfig',
         'setuptools',
         'xmpppy',
+        'zope.dottedname',
     ],
     entry_points="""
     [console_scripts]
-    notify=zeit.jabber.main:main
+    zeit-jabber-client=zeit.jabber.main:main
     """,
 )

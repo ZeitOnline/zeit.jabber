@@ -7,43 +7,6 @@ import xmpp
 log = logging.getLogger(__name__)
 
 
-class Notifier(object):
-
-    MAX_RETRIES = 3
-
-    def __init__(self, cms, queue, methods):
-        super(Notifier, self).__init__()
-        self.cms = cms
-        self.queue = queue
-        self.methods = methods
-        self.retries = {}
-
-    def process(self):
-        errors = []
-        while self.queue:
-            uid = self.queue.pop()
-            attempts = self.retries.get(uid, 0)
-            if attempts >= self.MAX_RETRIES:
-                log.error("Giving up on %s after %s retries", uid, attempts)
-                del self.retries[uid]
-                continue
-            log.debug('Invalidating %s', uid)
-            try:
-                for method in self.methods:
-                    getattr(self.cms, method)(uid)
-            except (SystemExit, KeyboardInterrupt):
-                raise
-            except:
-                attempts = self.retries.setdefault(uid, 0)
-                self.retries[uid] = attempts + 1
-                log.warning("Error while invalidating %s, trying again later.",
-                            uid, exc_info=True)
-                errors.append(uid)
-            else:
-                log.info('Invalidated %s', uid)
-        self.queue.update(errors)
-
-
 class Matcher(object):
 
     def __init__(self, regex):
@@ -59,9 +22,15 @@ class Reader(object):
     client = None
     client_disconnected_sleep = 10
 
-    def __init__(self, jabber_client_factory, queue, ignore=None):
+    def __init__(self, jabber_client_factory, action, ignore=None):
+        """
+        :param jabber_client_factory: callable with no arguments to create a
+          jabber client (we need to recreate it to support reconnect)
+        :param queue: an object that provides an `add(item)` method,
+          which we'll call for each changed uniqueId.
+        """
         self.client_factory = jabber_client_factory
-        self.queue = queue
+        self.action = action
         if ignore is None:
             ignore = []
         self._ignore = [Matcher(x) for x in ignore]
@@ -91,7 +60,7 @@ class Reader(object):
             log.debug('Ignored message (matched ignores list)')
             raise xmpp.NodeProcessed
         uid = 'http://xml.zeit.de/' + body[len(self.prefix):]
-        self.queue.add(uid)
+        self.action(uid)
         log.info('Scheduling for invalidation: %s', uid)
         raise xmpp.NodeProcessed
 
@@ -145,11 +114,9 @@ def get_jabber_client(user, password, group):
     return client
 
 
-def main_loop(cms, methods, jabber_client_factory, ignore):
-    queue = set()
-    notifier = Notifier(cms, queue, methods)
-    reader = Reader(jabber_client_factory, queue, ignore)
-
-    while True:
-        reader.process()
-        notifier.process()
+def from_config(config):
+    ignore = [x for x in config['ignore'].split('\n') if x]
+    return Reader(
+        lambda: get_jabber_client(
+            config['user'], config['password'], config['group']),
+        config['queue'], ignore)
