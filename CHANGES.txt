@@ -1,7 +1,7 @@
 zeit.jabber changes
 ===================
 
-1.0.1 (unreleased)
+1.1.0 (2017-09-04)
 ------------------
 
 - BUG-773: Support ignoring everything but `/yyyy` entries
