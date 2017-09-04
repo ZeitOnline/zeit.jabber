@@ -10,10 +10,18 @@ log = logging.getLogger(__name__)
 class Matcher(object):
 
     def __init__(self, regex):
+        if regex.startswith('!'):
+            self.negate = True
+            regex = regex[1:]
+        else:
+            self.negate = False
         self.regex = re.compile(regex)
 
     def __call__(self, text):
-        return bool(self.regex.search(text))
+        result = bool(self.regex.search(text))
+        if self.negate:
+            result = not result
+        return result
 
 
 class Reader(object):

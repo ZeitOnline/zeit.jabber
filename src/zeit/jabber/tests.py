@@ -179,3 +179,12 @@ class ReaderTest(unittest.TestCase):
         self.client.messages.append(self.message('bar'))
         self.reader.process()
         self.assertEquals(['http://xml.zeit.de/bar'], sorted(list(self.queue)))
+
+    def test_ignore_list_negation(self):
+        self.reader = zeit.jabber.jabber.Reader(
+            self.client, self.queue.add, ['!/cms/work/([0-9]+)'])
+        self.client.messages.append(self.message('foo'))
+        self.client.messages.append(self.message('2017/08/bar'))
+        self.reader.process()
+        self.assertEquals(
+            ['http://xml.zeit.de/2017/08/bar'], sorted(list(self.queue)))
