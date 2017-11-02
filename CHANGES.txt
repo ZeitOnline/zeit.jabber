@@ -1,7 +1,7 @@
 zeit.jabber changes
 ===================
 
-1.1.1 (unreleased)
+1.2.0 (2017-11-02)
 ------------------
 
 - BUG-800: Support selecting several different entries
