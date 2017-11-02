@@ -30,7 +30,8 @@ class Reader(object):
     client = None
     client_disconnected_sleep = 10
 
-    def __init__(self, jabber_client_factory, action, ignore=None):
+    def __init__(self, jabber_client_factory, action,
+                 select=None, ignore=None):
         """
         :param jabber_client_factory: callable with no arguments to create a
           jabber client (we need to recreate it to support reconnect)
@@ -39,9 +40,8 @@ class Reader(object):
         """
         self.client_factory = jabber_client_factory
         self.action = action
-        if ignore is None:
-            ignore = []
-        self._ignore = [Matcher(x) for x in ignore]
+        self._select = [Matcher(x) for x in select or ['^.*$']]
+        self._ignore = [Matcher(x) for x in ignore or []]
 
     def get_client(self):
         if self.client is None:
@@ -64,13 +64,22 @@ class Reader(object):
         if from_ != 'cms-backend' or not body.startswith(self.prefix):
             log.debug('Ignored message (wrong format)')
             raise xmpp.NodeProcessed
+        if not self.select(body):
+            log.debug('Ignored message (no match in select list)')
+            raise xmpp.NodeProcessed
         if self.ignore(body):
-            log.debug('Ignored message (matched ignores list)')
+            log.debug('Ignored message (match in ignore list)')
             raise xmpp.NodeProcessed
         uid = 'http://xml.zeit.de/' + body[len(self.prefix):]
         self.action(uid)
         log.info('Scheduling for invalidation: %s', uid)
         raise xmpp.NodeProcessed
+
+    def select(self, text):
+        for matcher in self._select:
+            if matcher(text):
+                return True
+        return False
 
     def ignore(self, text):
         for matcher in self._ignore:
@@ -123,8 +132,9 @@ def get_jabber_client(user, password, group):
 
 
 def from_config(config):
-    ignore = [x for x in config['ignore'].split('\n') if x]
+    select = [x for x in config.get('select', '').split('\n') if x]
+    ignore = [x for x in config.get('ignore', '').split('\n') if x]
     return Reader(
         lambda: get_jabber_client(
             config['user'], config['password'], config['group']),
-        config['queue'], ignore)
+        config['queue'], select, ignore)
