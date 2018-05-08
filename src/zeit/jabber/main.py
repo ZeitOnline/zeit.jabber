@@ -2,6 +2,7 @@ import ConfigParser
 import argparse
 import logging.config
 import os.path
+import threading
 import zeit.jabber.jabber
 import zope.dottedname.resolve
 
@@ -29,7 +30,11 @@ def main(argv=None):
     jabber['queue'] = notifier
     reader = zeit.jabber.jabber.from_config(jabber)
 
-    while True:
-        reader.process()
-        if hasattr(notifier, 'process'):
-            notifier.process()
+    threads = []
+    threads.append(threading.Thread(target=reader.process))
+    if hasattr(notifier, 'process'):
+        threads.append(threading.Thread(target=notifier.process))
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()

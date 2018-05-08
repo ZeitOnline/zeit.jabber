@@ -35,8 +35,7 @@ class Reader(object):
         """
         :param jabber_client_factory: callable with no arguments to create a
           jabber client (we need to recreate it to support reconnect)
-        :param queue: an object that provides an `add(item)` method,
-          which we'll call for each changed uniqueId.
+        :param action: a callable which we'll call for each changed uniqueId
         """
         self.client_factory = jabber_client_factory
         self.action = action
