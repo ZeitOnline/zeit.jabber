@@ -1,5 +1,5 @@
 import logging
-import xmlrpclib
+import six.moves.xmlrpc_client
 
 
 log = logging.getLogger(__name__)
@@ -46,6 +46,6 @@ class Notifier(object):
 
 
 def from_config(config):
-    cms = xmlrpclib.ServerProxy(config['url'])
+    cms = six.moves.xmlrpc_client.ServerProxy(config['url'])
     methods = tuple(x.strip() for x in config['methods'].split())
     return Notifier(cms, methods)
