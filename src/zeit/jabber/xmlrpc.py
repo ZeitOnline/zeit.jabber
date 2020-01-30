@@ -1,7 +1,13 @@
-import Queue
+import sys
+
 import logging
 import time
-import xmlrpclib
+import xmlrpc
+
+if sys.version_info[0] < 3:
+    import Queue
+else:
+    import queue as Queue
 
 
 log = logging.getLogger(__name__)
@@ -23,7 +29,8 @@ class Notifier(object):
         self.queue.put(item)
 
     def process(self):
-        while True:
+        errors = []
+        while self.queue.qsize() > 0:
             try:
                 uid = self.queue.get_nowait()
             except Queue.Empty:
@@ -48,11 +55,15 @@ class Notifier(object):
                 self.retries[uid] = attempts + 1
                 log.warning("Error while invalidating %s, trying again later.",
                             uid, exc_info=True)
+                errors.append(uid)
             else:
                 log.info('Invalidated %s', uid)
 
+        for err_uid in errors:
+            self.queue.put(err_uid)
+
 
 def from_config(config):
-    cms = xmlrpclib.ServerProxy(config['url'])
-    methods = tuple(x.strip() for x in config['methods'].split())
-    return Notifier(cms, methods)
+    with xmlrpc.client.ServerProxy(config['url']) as cms:
+        methods = tuple(x.strip() for x in config['methods'].split())
+        return Notifier(cms, methods)
