@@ -1,7 +1,12 @@
+import sys
 import unittest
-import xmpp
 import zeit.jabber.jabber
 import zeit.jabber.xmlrpc
+
+if sys.version_info < (3, 0):
+    import Queue
+else:
+    import queue as Queue
 
 
 class MockRPC(object):
@@ -33,167 +38,165 @@ class NotifierTest(unittest.TestCase):
             self.cms, methods=('invalidate', 'update_solr', 'testing_method'))
 
     def test_simple_pull(self):
-        self.notifier.queue.add('foo')
+        self.notifier.queue.put('foo')
         self.notifier.process()
         self.assertEquals(['foo'], self.cms.invalidated)
         self.assertEquals(['foo'], self.cms.solr)
         self.assertEquals(['foo'], self.cms.testing_method_log)
 
     def test_process_empties_queue_completely(self):
-        self.notifier.queue.add('foo')
-        self.notifier.queue.add('bar')
+        self.notifier.queue.put('foo')
+        self.notifier.queue.put('bar')
         self.notifier.process()
         self.assertEquals(['bar', 'foo'], sorted(self.cms.invalidated))
 
     def test_errors_stay_in_queue(self):
-        self.notifier.queue.add('foo')
-        self.notifier.queue.add('bar')
+        self.notifier.queue.put('foo')
+        self.notifier.queue.put('bar')
         self.cms.exception = Exception()
         self.notifier.process()
-        self.assertEquals(['bar', 'foo'], sorted(self.notifier.queue))
+
+        queue = []
+
+        while self.notifier.queue.qsize() > 0:
+            queue.append(self.notifier.queue.get())
+
+        self.assertEquals(['bar', 'foo'], sorted(queue))
 
     def test_after_max_retries_errors_are_removed_from_queue(self):
-        self.notifier.queue.add('foo')
+        self.notifier.queue.put('foo')
         self.cms.exception = Exception()
         self.notifier.MAX_RETRIES = 1
         self.notifier.process()
         self.notifier.process()
-        self.assertEqual(set(), self.notifier.queue)
+        self.assertEqual(0, self.notifier.queue.qsize())
 
     def test_exit_on_systemexit_and_keyboardinterrupt(self):
         for exc in (SystemExit, KeyboardInterrupt):
-            self.notifier.queue.add('foo')
+            self.notifier.queue.put('foo')
             self.cms.exception = exc()
             self.assertRaises(exc, self.notifier.process)
-
-
-class MockJabberClient(object):
-
-    messages = []
-    return_in_one_step = 100
-    connected = True
-
-    def RegisterHandler(self, type_, callback):
-        self.handler = callback
-
-    def Process(self, timeout=0):
-        processed = 0
-        while self.messages:
-            try:
-                self.handler(None, self.messages.pop(0))
-            except xmpp.NodeProcessed:
-                pass
-            else:
-                raise AssertionError("NodeProcessed not raised.")
-            processed += 1
-            if processed >= self.return_in_one_step:
-                break
-        return processed or '0'
-
-    def isConnected(self):
-        return self.connected
-
-
-class JabberData(object):
-
-    def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
-
-    def __getattr__(self, name):
-        if not name.startswith('get'):
-            raise AttributeError(name)
-        name = name[3:].lower()
-        if name == 'from':
-            name = 'from_'
-        return lambda: getattr(self, name)
 
 
 class ReaderTest(unittest.TestCase):
 
     def setUp(self):
-        self.client = type('Mock', (MockJabberClient,), {})
-        self.queue = set()
-        self.reader = zeit.jabber.jabber.Reader(self.client, self.queue.add)
-
-    def message(self, path, from_='cms-backend', prefix=None):
-        if prefix is None:
-            prefix = 'Resource changed: /cms/work/'
-        return JabberData(
-            from_=JabberData(resource=from_),
-            body=prefix + path)
+        self.queue = Queue.Queue()
+        self.client = zeit.jabber.jabber.JabberClient(
+            '', '', '', self.queue.put)
 
     def test_message_handler_adds_to_queue(self):
-        self.client.messages.append(self.message('foo/bar'))
-        self.reader.process()
+        prefix = 'Resource changed: /cms/work/'
+        from_ = 'cms-backend'
+        result = self.client.muc_message({
+            'from': from_,
+            'mucnick': from_,
+            'body': prefix + 'foo/bar'
+        })
+
+        self.assertIsNone(result)
+        self.assertEqual(1, self.queue.qsize())
+
+        queue = []
+
+        while self.queue.qsize() > 0:
+            queue.append(self.queue.get())
+
         self.assertEquals(
-            ['http://xml.zeit.de/foo/bar'], list(self.queue))
-
-    def test_multiple_messages_are_added_in_one_go(self):
-        self.client.messages.append(self.message('foo'))
-        self.client.messages.append(self.message('bar'))
-        self.client.messages.append(self.message('baz'))
-        self.reader.process()
-        self.assertEquals([
-            'http://xml.zeit.de/bar',
-            'http://xml.zeit.de/baz',
-            'http://xml.zeit.de/foo'],
-            sorted(list(self.queue)))
-
-    def test_multiple_messages_are_added_in_one_go_even_if_interruped(self):
-        self.client.return_in_one_step = 1
-        self.client.messages.append(self.message('foo'))
-        self.client.messages.append(self.message('bar'))
-        self.client.messages.append(self.message('baz'))
-        self.reader.process()
-        self.assertEquals([
-            'http://xml.zeit.de/bar',
-            'http://xml.zeit.de/baz',
-            'http://xml.zeit.de/foo'],
-            sorted(list(self.queue)))
+            ['http://xml.zeit.de/foo/bar'], list(queue))
 
     def test_only_cms_work_is_added(self):
-        self.client.messages.append(self.message('foo', prefix='blah'))
-        self.reader.process()
-        self.assertEquals([], list(self.queue))
+        prefix = 'blah'
+        from_ = 'cms-backend'
+        result = self.client.muc_message({
+            'from': from_,
+            'mucnick': 'nick',
+            'body': prefix + 'foo/bar'
+        })
+
+        self.assertEqual(result, 'wrong format')
 
     def test_only_cms_backend_is_added(self):
-        self.client.messages.append(self.message('foo', from_='somebody-else'))
-        self.reader.process()
-        self.assertEquals([], list(self.queue))
+        prefix = 'blah'
+        from_ = 'somebody-else'
+        result = self.client.muc_message({
+            'from': from_,
+            'mucnick': 'nick',
+            'body': prefix + 'foo/bar'
+        })
 
-    def test_disconnect(self):
-        self.client.messages.append(self.message('foo'))
-        self.reader.client_disconnected_sleep = 0
-        self.client.connected = False
-        self.reader.process()
-        self.assertEquals([], list(self.queue))
-        self.client.connected = True
-        self.reader.process()
-        self.assertEquals(
-            ['http://xml.zeit.de/foo'], list(self.queue))
+        self.assertEqual(result, 'wrong format')
 
     def test_ignore_list(self):
-        self.reader = zeit.jabber.jabber.Reader(
-            self.client, self.queue.add, ignore=['/cms/work/foo'])
-        self.client.messages.append(self.message('foo'))
-        self.client.messages.append(self.message('bar'))
-        self.reader.process()
-        self.assertEquals(['http://xml.zeit.de/bar'], sorted(list(self.queue)))
+        self.client = zeit.jabber.jabber.JabberClient(
+            '', '', '', self.queue.put, ignore=['/cms/work/foo'])
+
+        prefix = 'Resource changed: /cms/work/'
+        from_ = 'cms-backend'
+        result = self.client.muc_message({
+            'from': from_,
+            'mucnick': 'nick',
+            'body': prefix + 'foo'
+        })
+
+        self.assertEqual(result, 'ignored')
 
     def test_ignore_list_negation(self):
-        self.reader = zeit.jabber.jabber.Reader(
-            self.client, self.queue.add, ignore=['!/cms/work/([0-9]+)'])
-        self.client.messages.append(self.message('foo'))
-        self.client.messages.append(self.message('2017/08/bar'))
-        self.reader.process()
-        self.assertEquals(
-            ['http://xml.zeit.de/2017/08/bar'], sorted(list(self.queue)))
+        self.client = zeit.jabber.jabber.JabberClient(
+            '', '', '', self.queue.put, ignore=['!/cms/work/([0-9]+)'])
+
+        prefix = 'Resource changed: /cms/work/'
+        from_ = 'cms-backend'
+        result = self.client.muc_message({
+            'from': from_,
+            'mucnick': 'nick',
+            'body': prefix + 'foo'
+        })
+
+        self.assertEqual(result, 'ignored')
+
+        result = self.client.muc_message({
+            'from': from_,
+            'mucnick': 'nick',
+            'body': prefix + '2017/08/bar'
+        })
+
+        self.assertIsNone(result)
+        self.assertEqual(1, self.queue.qsize())
+
+        queue = []
+
+        while self.queue.qsize() > 0:
+            queue.append(self.queue.get())
+
+        self.assertEquals(['http://xml.zeit.de/2017/08/bar'], sorted(queue))
 
     def test_ignore_list_select(self):
-        self.reader = zeit.jabber.jabber.Reader(
-            self.client, self.queue.add, select=['/cms/work/([0-9]+)'])
-        self.client.messages.append(self.message('foo'))
-        self.client.messages.append(self.message('2017/08/bar'))
-        self.reader.process()
-        self.assertEquals(
-            ['http://xml.zeit.de/2017/08/bar'], sorted(list(self.queue)))
+        self.client = zeit.jabber.jabber.JabberClient(
+            '', '', '', self.queue.put, select=['/cms/work/([0-9]+)'])
+
+        prefix = 'Resource changed: /cms/work/'
+        from_ = 'cms-backend'
+        result = self.client.muc_message({
+            'from': from_,
+            'mucnick': 'nick',
+            'body': prefix + 'foo'
+        })
+
+        self.assertEqual(result, 'no match')
+
+        result = self.client.muc_message({
+            'from': from_,
+            'mucnick': 'nick',
+            'body': prefix + '2017/08/bar'
+        })
+
+        self.assertIsNone(result)
+        self.assertEqual(1, self.queue.qsize())
+
+        queue = []
+
+        while self.queue.qsize() > 0:
+            queue.append(self.queue.get())
+
+        self.assertEquals(['http://xml.zeit.de/2017/08/bar'], sorted(queue))
