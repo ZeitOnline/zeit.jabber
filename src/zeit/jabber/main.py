@@ -1,4 +1,4 @@
-import ConfigParser
+import six.moves.configparser
 import argparse
 import logging.config
 import os.path
@@ -13,7 +13,7 @@ def main(argv=None):
     parser.add_argument(
         'configfile', help='ini file')
     options = parser.parse_args(argv)
-    config = ConfigParser.ConfigParser()
+    config = six.moves.configparser.ConfigParser()
     configfile = os.path.abspath(options.configfile)
     config.read(configfile)
 
