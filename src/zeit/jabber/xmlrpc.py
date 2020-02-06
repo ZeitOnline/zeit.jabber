@@ -34,7 +34,7 @@ class Notifier(object):
                     getattr(self.cms, method)(uid)
             except (SystemExit, KeyboardInterrupt):
                 raise
-            except:
+            except Exception:
                 attempts = self.retries.setdefault(uid, 0)
                 self.retries[uid] = attempts + 1
                 log.warning("Error while invalidating %s, trying again later.",

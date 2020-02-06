@@ -112,7 +112,7 @@ def get_jabber_client(user, password, group):
     client.connect()
     if not client.isConnected():
         return None
-    auth = client.auth(jid.getNode(), password, resource=jid.getResource())
+    client.auth(jid.getNode(), password, resource=jid.getResource())
     client.sendInitPresence()
     nick_base = 'cms-frontend'
     nick = nick_base
