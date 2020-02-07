@@ -16,6 +16,7 @@ setup(
         'setuptools',
         'sleekxmpp',
         'zope.dottedname',
+        'six',
     ],
     entry_points="""
     [console_scripts]
