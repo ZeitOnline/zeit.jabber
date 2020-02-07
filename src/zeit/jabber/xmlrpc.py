@@ -2,12 +2,14 @@ import sys
 
 import logging
 import time
-import xmlrpc
 
 if sys.version_info[0] < 3:
     import Queue
+    import xmlrpclib as xmlrpc
 else:
     import queue as Queue
+    import xmlrpc
+    import xmlrpc.client
 
 
 log = logging.getLogger(__name__)

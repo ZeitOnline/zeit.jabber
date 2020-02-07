@@ -1,3 +1,4 @@
+import six
 import six.moves.configparser
 import argparse
 import logging.config
@@ -5,6 +6,10 @@ import os.path
 import threading
 import zeit.jabber.jabber
 import zope.dottedname.resolve
+import sleekxmpp.exceptions
+import logging
+
+log = logging.getLogger(__name__)
 
 
 def main(argv=None):
@@ -30,11 +35,20 @@ def main(argv=None):
     jabber['queue'] = notifier
     reader = zeit.jabber.jabber.from_config(jabber)
 
-    threads = []
-    threads.append(threading.Thread(target=reader.process))
-    if hasattr(notifier, 'process'):
-        threads.append(threading.Thread(target=notifier.process))
-    for t in threads:
-        t.start()
-    for t in threads:
-        t.join()
+    if reader.connect():
+        log.info("Connecting to jabber server as %s", jabber['user'])
+        reader.process(block=True)
+    else:
+        log.error("Could not connect to webdav server.")
+        raise sleekxmpp.exceptions.XMPPError('')
+
+    log.info('SCRIPT END')
+
+    #threads = []
+    #threads.append(threading.Thread(target=reader.process))
+    #if hasattr(notifier, 'process'):
+    #    threads.append(threading.Thread(target=notifier.process))
+    #for t in threads:
+    #    t.start()
+    #for t in threads:
+    #    t.join()

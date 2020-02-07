@@ -1,6 +1,7 @@
 import logging
 import re
 import sleekxmpp
+import sleekxmpp.xmlstream
 
 log = logging.getLogger(__name__)
 
@@ -14,36 +15,52 @@ class JabberClient(sleekxmpp.ClientXMPP):
                  select=None, ignore=None):
 
         self.boundjid = sleekxmpp.xmlstream.JID(user)
-        self.credentials = {}
-        self.password = password
+        # self.credentials = {}
+        # self.password = password
         self.action = action
 
         self.room = group
 
+        sleekxmpp.ClientXMPP.__init__(self, self.boundjid, password)
+
+        # self.features = set()
+
         self._select = [Matcher(x) for x in select or ['^.*$']]
         self._ignore = [Matcher(x) for x in ignore or []]
 
-        super(sleekxmpp.ClientXMPP, self).__init__(
-            self.boundjid, self.password)
-        # sleekxmpp.ClientXMPP(self.boundjid, self.password)
+        #super(sleekxmpp.ClientXMPP, self).__init__(
+        #    self.boundjid, self.password)
 
-        self.add_event_handler('session_start', self.start)
-        self.add_event_handler('groupchat_message', self.muc_message)
+        self.add_event_handler("session_start", self.start)
+        self.add_event_handler("groupchat_message", self.muc_message)
+        self.add_event_handler("muc::%s::got_online" % self.room, self.muc_online)
+        self.add_event_handler('disconnected', self.disconnected)
 
-        self.register_plugin('xep_0045')  # Multi-User Chat
-        self.register_plugin('xep_0199')  # XMPP Ping
+        self.register_plugin("xep_0030")  # Service Discovery
+        self.register_plugin("xep_0045")  # Multi-User Chat
+        self.register_plugin("xep_0199")  # XMPP Ping
 
-    def start(self):
+    def disconnected(self, event):
+        log.debug('jabber client disconnect')
+
+    def start(self, event):
         self.get_roster()
         self.send_presence()
 
         self.plugin['xep_0045'].joinMUC(self.room, self.nick, wait=True)
 
-        if self.connect():
-            log.info("Connecting to jabber server as %s", self.boundjid)
-        else:
-            log.error("Could not connect to webdav server.")
-            raise sleekxmpp.exceptions.XMPPError('')
+    def muc_online(self, presence):
+        """
+        Process a presence stanza from a chat room. In this case,
+        presences from users that have just come online are
+        handled by sending a welcome message that includes
+        the user's nickname and role in the room.
+        Arguments:
+            presence -- The received presence stanza. See the
+                        documentation for the Presence stanza
+                        to see how else it may be used.
+        """
+        log.debug("Got presence for %s", presence['muc']['nick'])
 
     def muc_message(self, msg):
         """
@@ -51,7 +68,7 @@ class JabberClient(sleekxmpp.ClientXMPP):
         otherwise you will create an infinite loop responding
         to your own messages."""
         if msg['mucnick'] != self.nick:
-            from_ = msg['from']
+            from_ = msg['from'].resource
             body = msg['body']
 
             log.debug('Received message [%s] %s', from_, body)
