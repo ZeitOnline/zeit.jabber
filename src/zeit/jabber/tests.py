@@ -78,6 +78,10 @@ class NotifierTest(unittest.TestCase):
             self.assertRaises(exc, self.notifier.process)
 
 
+class MockMessage:
+    resource = ''
+
+
 class ReaderTest(unittest.TestCase):
 
     def setUp(self):
@@ -88,8 +92,12 @@ class ReaderTest(unittest.TestCase):
     def test_message_handler_adds_to_queue(self):
         prefix = 'Resource changed: /cms/work/'
         from_ = 'cms-backend'
+
+        m = MockMessage()
+        m.resource = from_
+
         result = self.client.muc_message({
-            'from': from_,
+            'from': m,
             'mucnick': from_,
             'body': prefix + 'foo/bar'
         })
@@ -108,8 +116,12 @@ class ReaderTest(unittest.TestCase):
     def test_only_cms_work_is_added(self):
         prefix = 'blah'
         from_ = 'cms-backend'
+
+        m = MockMessage()
+        m.resource = from_
+
         result = self.client.muc_message({
-            'from': from_,
+            'from': m,
             'mucnick': 'nick',
             'body': prefix + 'foo/bar'
         })
@@ -119,8 +131,12 @@ class ReaderTest(unittest.TestCase):
     def test_only_cms_backend_is_added(self):
         prefix = 'blah'
         from_ = 'somebody-else'
+
+        m = MockMessage()
+        m.resource = from_
+
         result = self.client.muc_message({
-            'from': from_,
+            'from': m,
             'mucnick': 'nick',
             'body': prefix + 'foo/bar'
         })
@@ -133,8 +149,12 @@ class ReaderTest(unittest.TestCase):
 
         prefix = 'Resource changed: /cms/work/'
         from_ = 'cms-backend'
+
+        m = MockMessage()
+        m.resource = from_
+
         result = self.client.muc_message({
-            'from': from_,
+            'from': m,
             'mucnick': 'nick',
             'body': prefix + 'foo'
         })
@@ -147,8 +167,12 @@ class ReaderTest(unittest.TestCase):
 
         prefix = 'Resource changed: /cms/work/'
         from_ = 'cms-backend'
+
+        m = MockMessage()
+        m.resource = from_
+
         result = self.client.muc_message({
-            'from': from_,
+            'from': m,
             'mucnick': 'nick',
             'body': prefix + 'foo'
         })
@@ -156,7 +180,7 @@ class ReaderTest(unittest.TestCase):
         self.assertEqual(result, 'ignored')
 
         result = self.client.muc_message({
-            'from': from_,
+            'from': m,
             'mucnick': 'nick',
             'body': prefix + '2017/08/bar'
         })
@@ -177,8 +201,12 @@ class ReaderTest(unittest.TestCase):
 
         prefix = 'Resource changed: /cms/work/'
         from_ = 'cms-backend'
+
+        m = MockMessage()
+        m.resource = from_
+
         result = self.client.muc_message({
-            'from': from_,
+            'from': m,
             'mucnick': 'nick',
             'body': prefix + 'foo'
         })
@@ -186,7 +214,7 @@ class ReaderTest(unittest.TestCase):
         self.assertEqual(result, 'no match')
 
         result = self.client.muc_message({
-            'from': from_,
+            'from': m,
             'mucnick': 'nick',
             'body': prefix + '2017/08/bar'
         })
