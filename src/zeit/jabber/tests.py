@@ -86,6 +86,7 @@ class ReaderTest(unittest.TestCase):
 
     def setUp(self):
         self.queue = Queue.Queue()
+        zeit.jabber.jabber.JabberClient.connect_client = lambda a: None
         self.client = zeit.jabber.jabber.JabberClient(
             '', '', '', self.queue.put)
 
