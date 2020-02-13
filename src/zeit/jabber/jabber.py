@@ -15,30 +15,31 @@ class JabberClient(sleekxmpp.ClientXMPP):
                  select=None, ignore=None):
 
         self.boundjid = sleekxmpp.xmlstream.JID(user)
-        # self.credentials = {}
-        # self.password = password
         self.action = action
 
         self.room = group
 
         sleekxmpp.ClientXMPP.__init__(self, self.boundjid, password)
 
-        # self.features = set()
-
         self._select = [Matcher(x) for x in select or ['^.*$']]
         self._ignore = [Matcher(x) for x in ignore or []]
 
-        #super(sleekxmpp.ClientXMPP, self).__init__(
-        #    self.boundjid, self.password)
-
         self.add_event_handler("session_start", self.start)
         self.add_event_handler("groupchat_message", self.muc_message)
-        self.add_event_handler("muc::%s::got_online" % self.room, self.muc_online)
+        self.add_event_handler(
+            "muc::%s::got_online" % self.room, self.muc_online)
         self.add_event_handler('disconnected', self.disconnected)
 
         self.register_plugin("xep_0030")  # Service Discovery
         self.register_plugin("xep_0045")  # Multi-User Chat
         self.register_plugin("xep_0199")  # XMPP Ping
+
+        if self.connect():
+            log.info("Connecting to jabber server as %s", user)
+            self.process(block=True)
+        else:
+            log.error("Could not connect to webdav server.")
+            raise sleekxmpp.exceptions.XMPPError('')
 
     def disconnected(self, event):
         log.debug('jabber client disconnect')
