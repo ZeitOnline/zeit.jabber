@@ -14,6 +14,7 @@ class JabberClient(sleekxmpp.ClientXMPP):
     def __init__(self, user, password, group, action,
                  select=None, ignore=None):
 
+        self.user = user
         self.boundjid = sleekxmpp.xmlstream.JID(user)
         self.action = action
 
@@ -34,8 +35,11 @@ class JabberClient(sleekxmpp.ClientXMPP):
         self.register_plugin("xep_0045")  # Multi-User Chat
         self.register_plugin("xep_0199")  # XMPP Ping
 
+        self.connect_client()
+
+    def connect_client(self):
         if self.connect():
-            log.info("Connecting to jabber server as %s", user)
+            log.info("Connecting to jabber server as %s", self.user)
             self.process(block=True)
         else:
             log.error("Could not connect to webdav server.")
