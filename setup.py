@@ -14,9 +14,9 @@ setup(
     zip_safe=False,
     install_requires=[
         'setuptools',
-        'six',
-        'xmpppy',
+        'sleekxmpp',
         'zope.dottedname',
+        'six',
     ],
     entry_points="""
     [console_scripts]
