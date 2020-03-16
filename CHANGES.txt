@@ -4,13 +4,13 @@ zeit.jabber changes
 1.3.1 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- ZON-5688: Fix py2 compat
 
 
 1.3.0 (2020-03-16)
 ------------------
 
-- ZON-5750: Replace xmpppy with SleekXmpp
+- ZON-5688: Replace xmpppy with SleekXmpp
 
 
 1.2.0 (2017-11-02)

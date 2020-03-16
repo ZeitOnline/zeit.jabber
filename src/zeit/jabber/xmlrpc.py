@@ -3,13 +3,12 @@ import sys
 import logging
 import time
 
-if sys.version_info[0] < 3:
+if sys.version_info < (3,):
     import Queue
     import xmlrpclib as xmlrpc
 else:
     import queue as Queue
-    import xmlrpc
-    import xmlrpc.client
+    import xmlrpc.client as xmlrpc
 
 
 log = logging.getLogger(__name__)
@@ -66,6 +65,6 @@ class Notifier(object):
 
 
 def from_config(config):
-    with xmlrpc.client.ServerProxy(config['url']) as cms:
+    with xmlrpc.ServerProxy(config['url']) as cms:
         methods = tuple(x.strip() for x in config['methods'].split())
         return Notifier(cms, methods)
