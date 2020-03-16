@@ -65,6 +65,6 @@ class Notifier(object):
 
 
 def from_config(config):
-    with xmlrpc.ServerProxy(config['url']) as cms:
-        methods = tuple(x.strip() for x in config['methods'].split())
-        return Notifier(cms, methods)
+    cms = xmlrpc.ServerProxy(config['url'])
+    methods = tuple(x.strip() for x in config['methods'].split())
+    return Notifier(cms, methods)
