@@ -1,7 +1,7 @@
 zeit.jabber changes
 ===================
 
-1.3.2 (unreleased)
+1.3.2 (2020-03-16)
 ------------------
 
 - ZON-5688: More py2 compat
