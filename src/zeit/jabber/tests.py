@@ -40,15 +40,15 @@ class NotifierTest(unittest.TestCase):
     def test_simple_pull(self):
         self.notifier.queue.put('foo')
         self.notifier.process()
-        self.assertEquals(['foo'], self.cms.invalidated)
-        self.assertEquals(['foo'], self.cms.solr)
-        self.assertEquals(['foo'], self.cms.testing_method_log)
+        self.assertEqual(['foo'], self.cms.invalidated)
+        self.assertEqual(['foo'], self.cms.solr)
+        self.assertEqual(['foo'], self.cms.testing_method_log)
 
     def test_process_empties_queue_completely(self):
         self.notifier.queue.put('foo')
         self.notifier.queue.put('bar')
         self.notifier.process()
-        self.assertEquals(['bar', 'foo'], sorted(self.cms.invalidated))
+        self.assertEqual(['bar', 'foo'], sorted(self.cms.invalidated))
 
     def test_errors_stay_in_queue(self):
         self.notifier.queue.put('foo')
@@ -61,7 +61,7 @@ class NotifierTest(unittest.TestCase):
         while self.notifier.queue.qsize() > 0:
             queue.append(self.notifier.queue.get())
 
-        self.assertEquals(['bar', 'foo'], sorted(queue))
+        self.assertEqual(['bar', 'foo'], sorted(queue))
 
     def test_after_max_retries_errors_are_removed_from_queue(self):
         self.notifier.queue.put('foo')
@@ -111,7 +111,7 @@ class ReaderTest(unittest.TestCase):
         while self.queue.qsize() > 0:
             queue.append(self.queue.get())
 
-        self.assertEquals(
+        self.assertEqual(
             ['http://xml.zeit.de/foo/bar'], list(queue))
 
     def test_only_cms_work_is_added(self):
@@ -194,7 +194,7 @@ class ReaderTest(unittest.TestCase):
         while self.queue.qsize() > 0:
             queue.append(self.queue.get())
 
-        self.assertEquals(['http://xml.zeit.de/2017/08/bar'], sorted(queue))
+        self.assertEqual(['http://xml.zeit.de/2017/08/bar'], sorted(queue))
 
     def test_ignore_list_select(self):
         self.client = zeit.jabber.jabber.JabberClient(
@@ -228,4 +228,4 @@ class ReaderTest(unittest.TestCase):
         while self.queue.qsize() > 0:
             queue.append(self.queue.get())
 
-        self.assertEquals(['http://xml.zeit.de/2017/08/bar'], sorted(queue))
+        self.assertEqual(['http://xml.zeit.de/2017/08/bar'], sorted(queue))
