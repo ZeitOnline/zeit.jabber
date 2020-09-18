@@ -36,25 +36,29 @@ class NotifierTest(unittest.TestCase):
         self.cms = MockRPC()
         self.notifier = zeit.jabber.xmlrpc.Notifier(
             self.cms, methods=('invalidate', 'update_solr', 'testing_method'))
+        self.notifier.EMPTY_PAUSE = 0
 
     def test_simple_pull(self):
         self.notifier.queue.put('foo')
-        self.notifier.process()
+        self.notifier._process()
         self.assertEqual(['foo'], self.cms.invalidated)
         self.assertEqual(['foo'], self.cms.solr)
         self.assertEqual(['foo'], self.cms.testing_method_log)
 
-    def test_process_empties_queue_completely(self):
+    def test_process_empties_queue_one_item_at_a_time(self):
         self.notifier.queue.put('foo')
         self.notifier.queue.put('bar')
-        self.notifier.process()
+        self.notifier._process()
+        self.notifier._process()
         self.assertEqual(['bar', 'foo'], sorted(self.cms.invalidated))
 
     def test_errors_stay_in_queue(self):
         self.notifier.queue.put('foo')
         self.notifier.queue.put('bar')
         self.cms.exception = Exception()
-        self.notifier.process()
+        self.notifier._process()
+        self.notifier._process()
+        self.notifier._process()
 
         queue = []
 
@@ -67,8 +71,9 @@ class NotifierTest(unittest.TestCase):
         self.notifier.queue.put('foo')
         self.cms.exception = Exception()
         self.notifier.MAX_RETRIES = 1
-        self.notifier.process()
-        self.notifier.process()
+        self.notifier._process()
+        self.notifier._process()
+        self.notifier._process()
         self.assertEqual(0, self.notifier.queue.qsize())
 
 
