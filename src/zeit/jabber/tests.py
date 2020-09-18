@@ -71,12 +71,6 @@ class NotifierTest(unittest.TestCase):
         self.notifier.process()
         self.assertEqual(0, self.notifier.queue.qsize())
 
-    def test_exit_on_systemexit_and_keyboardinterrupt(self):
-        for exc in (SystemExit, KeyboardInterrupt):
-            self.notifier.queue.put('foo')
-            self.cms.exception = exc()
-            self.assertRaises(exc, self.notifier.process)
-
 
 class MockMessage:
     resource = ''
