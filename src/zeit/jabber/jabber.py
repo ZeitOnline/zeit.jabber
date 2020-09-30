@@ -35,8 +35,6 @@ class JabberClient(sleekxmpp.ClientXMPP):
         self.register_plugin("xep_0045")  # Multi-User Chat
         self.register_plugin("xep_0199")  # XMPP Ping
 
-        self.connect_client()
-
     def connect_client(self):
         if self.connect():
             log.info("Connecting to jabber server as %s", self.user)

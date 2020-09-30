@@ -35,7 +35,7 @@ def main(argv=None):
     reader = zeit.jabber.jabber.from_config(jabber)
 
     threads = []
-    threads.append(threading.Thread(target=reader.process))
+    threads.append(threading.Thread(target=reader.connect_client))
     if hasattr(notifier, 'process'):
         threads.append(threading.Thread(target=notifier.process))
     for t in threads:
