@@ -36,8 +36,7 @@ def main(argv=None):
 
     threads = []
     threads.append(threading.Thread(target=reader.connect_client))
-    if hasattr(notifier, 'process'):
-        threads.append(threading.Thread(target=notifier.process))
+    threads.append(threading.Thread(target=notifier.process))
     for t in threads:
         t.start()
     for t in threads:
