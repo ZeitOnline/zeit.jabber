@@ -1,14 +1,7 @@
-import sys
-
 import logging
+import queue
 import time
-
-if sys.version_info < (3,):
-    import Queue
-    import xmlrpclib as xmlrpc
-else:
-    import queue as Queue
-    import xmlrpc.client as xmlrpc
+import xmlrpc.client
 
 
 log = logging.getLogger(__name__)
@@ -22,7 +15,7 @@ class Notifier(object):
     def __init__(self, cms, methods):
         super(Notifier, self).__init__()
         self.cms = cms
-        self.queue = Queue.Queue()
+        self.queue = queue.Queue()
         self.methods = methods
         self.retries = {}
 
@@ -36,7 +29,7 @@ class Notifier(object):
     def _process(self):
         try:
             uid = self.queue.get_nowait()
-        except Queue.Empty:
+        except queue.Empty:
             for item, retries in self.retries.items():
                 self(item)
             time.sleep(self.EMPTY_PAUSE)
@@ -62,6 +55,6 @@ class Notifier(object):
 
 
 def from_config(config):
-    cms = xmlrpc.ServerProxy(config['url'])
+    cms = xmlrpc.client.ServerProxy(config['url'])
     methods = tuple(x.strip() for x in config['methods'].split())
     return Notifier(cms, methods)

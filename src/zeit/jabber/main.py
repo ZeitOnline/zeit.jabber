@@ -1,12 +1,11 @@
-import six
-import six.moves.configparser
 import argparse
+import configparser
+import logging
 import logging.config
 import os.path
 import threading
 import zeit.jabber.jabber
 import zope.dottedname.resolve
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -17,7 +16,7 @@ def main(argv=None):
     parser.add_argument(
         'configfile', help='ini file')
     options = parser.parse_args(argv)
-    config = six.moves.configparser.ConfigParser()
+    config = configparser.ConfigParser()
     configfile = os.path.abspath(options.configfile)
     config.read(configfile)
 

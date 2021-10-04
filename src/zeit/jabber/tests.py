@@ -1,12 +1,7 @@
-import sys
+import queue
 import unittest
 import zeit.jabber.jabber
 import zeit.jabber.xmlrpc
-
-if sys.version_info < (3, 0):
-    import Queue
-else:
-    import queue as Queue
 
 
 class MockRPC(object):
@@ -84,7 +79,7 @@ class MockMessage:
 class ReaderTest(unittest.TestCase):
 
     def setUp(self):
-        self.queue = Queue.Queue()
+        self.queue = queue.Queue()
         zeit.jabber.jabber.JabberClient.connect_client = lambda a: None
         self.client = zeit.jabber.jabber.JabberClient(
             '', '', '', self.queue.put)
