@@ -1,6 +1,12 @@
 zeit.jabber changes
 ===================
 
+1.4.1 (unreleased)
+------------------
+
+- Nothing changed yet.
+
+
 1.4.0 (2022-04-14)
 ------------------
 
