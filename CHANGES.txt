@@ -1,7 +1,7 @@
 zeit.jabber changes
 ===================
 
-1.3.6 (unreleased)
+1.4.0 (2022-04-14)
 ------------------
 
 - ZO-856: Replace sleekxmpp with its successor slixmpp
