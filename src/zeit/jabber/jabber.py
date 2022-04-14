@@ -1,12 +1,12 @@
 import logging
 import re
-import sleekxmpp
-import sleekxmpp.xmlstream
+import slixmpp
+import slixmpp.xmlstream
 
 log = logging.getLogger(__name__)
 
 
-class JabberClient(sleekxmpp.ClientXMPP):
+class JabberClient(slixmpp.ClientXMPP):
 
     prefix = 'Resource changed: /cms/work/'
     nick = 'cms-frontend'
@@ -15,12 +15,12 @@ class JabberClient(sleekxmpp.ClientXMPP):
                  select=None, ignore=None):
 
         self.user = user
-        self.boundjid = sleekxmpp.xmlstream.JID(user)
+        self.boundjid = slixmpp.xmlstream.JID(user)
         self.action = action
 
         self.room = group
 
-        sleekxmpp.ClientXMPP.__init__(self, self.boundjid, password)
+        slixmpp.ClientXMPP.__init__(self, self.boundjid, password)
 
         self._select = [Matcher(x) for x in select or ['^.*$']]
         self._ignore = [Matcher(x) for x in ignore or []]
@@ -41,7 +41,7 @@ class JabberClient(sleekxmpp.ClientXMPP):
             self.process(block=True)
         else:
             log.error("Could not connect to webdav server.")
-            raise sleekxmpp.exceptions.XMPPError('')
+            raise slixmpp.exceptions.XMPPError('')
 
     def disconnected(self, event):
         log.debug('jabber client disconnect')
