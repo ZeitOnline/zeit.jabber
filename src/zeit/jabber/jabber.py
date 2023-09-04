@@ -70,27 +70,29 @@ class JabberClient(slixmpp.ClientXMPP):
         IMPORTANT: Always check that a message is not from yourself,
         otherwise you will create an infinite loop responding
         to your own messages."""
-        if msg['mucnick'] != self.nick:
-            from_ = msg['from'].resource
-            body = msg['body']
+        if msg['mucnick'] == self.nick:
+            return None
 
-            log.debug('Received message [%s] %s', from_, body)
-            if from_ != 'cms-backend' or not body.startswith(self.prefix):
-                log.debug('Ignored message (wrong format)')
-                return 'wrong format'
+        from_ = msg['from'].resource
+        body = msg['body']
 
-            if not self.select(body):
-                log.debug('Ignored message (no match in select list)')
-                return 'no match'
+        log.debug('Received message [%s] %s', from_, body)
+        if from_ != 'cms-backend' or not body.startswith(self.prefix):
+            log.debug('Ignored message (wrong format)')
+            return 'wrong format'
 
-            if self.ignore(body):
-                log.debug('Ignored message (match in ignore list)')
-                return 'ignored'
+        if not self.select(body):
+            log.debug('Ignored message (no match in select list)')
+            return 'no match'
 
-            uid = 'http://xml.zeit.de/' + body[len(self.prefix):]
-            self.action(uid)
+        if self.ignore(body):
+            log.debug('Ignored message (match in ignore list)')
+            return 'ignored'
 
-            log.info('Scheduling for invalidation: %s', uid)
+        uid = 'http://xml.zeit.de/' + body[len(self.prefix):]
+        log.info('Scheduling for invalidation: %s', uid)
+        self.action(uid)
+        return None
 
     def select(self, text):
         for matcher in self._select:

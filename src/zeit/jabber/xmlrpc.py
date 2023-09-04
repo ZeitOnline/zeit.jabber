@@ -30,7 +30,7 @@ class Notifier(object):
         try:
             uid = self.queue.get_nowait()
         except queue.Empty:
-            for item, retries in self.retries.items():
+            for item, _retries in self.retries.items():
                 self(item)
             time.sleep(self.EMPTY_PAUSE)
             return
